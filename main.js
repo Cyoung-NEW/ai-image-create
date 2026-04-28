@@ -207,6 +207,17 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   @keyframes fadeUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
   .err { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(255,90,90,0.08); border: 1px solid rgba(255,90,90,0.25); color: #ffb3b3; font-size: 13px; white-space: pre-wrap; text-align: left; max-width: 520px; }
   .hidden { display: none !important; }
+  .history { max-width: 1240px; margin: 0 auto 40px; padding: 0 24px; }
+  .history-head { display:flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .history-head .title { display:flex; align-items:center; gap:8px; font-size: 15px; font-weight: 600; }
+  .history-head .title .ic { color: var(--accent-a); }
+  .history-head .count { color: var(--muted-2); font-size: 12px; font-weight: 400; margin-left: 6px; }
+  .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .hist-card { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: rgba(0,0,0,0.3); cursor: pointer; transition: transform .15s, box-shadow .2s; }
+  .hist-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(192,132,252,0.15); }
+  .hist-card img { display:block; width: 100%; height: 180px; object-fit: cover; }
+  .hist-card .hist-prompt { position: absolute; left:0; right:0; bottom:0; padding: 8px 10px; font-size: 11px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.78)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hist-empty { color: var(--muted-2); font-size: 13px; text-align: center; padding: 30px; border: 1px dashed var(--border); border-radius: 12px; }
   .footer { border-top: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted-2); }
   .footer .heart { color: #ec4899; }
 </style>
@@ -290,6 +301,14 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
       </div>
     </section>
   </main>
+
+  <section class="history">
+    <div class="history-head">
+      <div class="title"><span class="ic">🕘</span> 历史记录 <span class="count" id="histCount"></span></div>
+      <button class="icon-btn" id="clearHistBtn">清空</button>
+    </div>
+    <div id="historyBody"></div>
+  </section>
 
   <footer class="footer">
     <div>© 2024 AI Image Generator. All rights reserved.</div>
@@ -383,6 +402,43 @@ async function waitForOne(apiKey, prompt, size, startTs, onPhase) {
   }
 }
 
+const HIST_KEY = "gen_history_v1";
+const HIST_MAX = 50;
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); } catch(e) { return []; }
+}
+function saveHistory(list) { localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0, HIST_MAX))); }
+function addToHistory(prompt, size, items) {
+  const list = loadHistory();
+  const flat = [];
+  items.forEach(it => it.urls.forEach(u => flat.push({ url: u, tid: it.tid, prompt, size, ts: Date.now() })));
+  saveHistory([...flat, ...list]);
+  renderHistory();
+}
+function renderHistory() {
+  const list = loadHistory();
+  const body = $("historyBody");
+  $("histCount").textContent = list.length ? "（" + list.length + "）" : "";
+  if (!list.length) { body.innerHTML = '<div class="hist-empty">还没有生成记录，去左边创作第一张吧 ✦</div>'; return; }
+  body.innerHTML = '<div class="history-grid">' + list.map(it =>
+    '<div class="hist-card" data-url="' + it.url + '" title="' + (it.prompt || "").replace(/"/g, "&quot;") + '">' +
+      '<img src="' + it.url + '" loading="lazy" alt="" />' +
+      '<div class="hist-prompt">' + ((it.prompt || "").replace(/</g, "&lt;")) + '</div>' +
+    '</div>'
+  ).join("") + '</div>';
+}
+$("historyBody").addEventListener("click", e => {
+  const card = e.target.closest(".hist-card");
+  if (card) window.open(card.dataset.url, "_blank", "noopener");
+});
+$("clearHistBtn").addEventListener("click", () => {
+  if (loadHistory().length && confirm("确定清空全部历史记录？")) {
+    localStorage.removeItem(HIST_KEY);
+    renderHistory();
+  }
+});
+renderHistory();
+
 function renderResults(items) {
   const body = $("resultBody");
   body.innerHTML = '<div class="grid-imgs">' +
@@ -430,6 +486,7 @@ $("genBtn").addEventListener("click", async () => {
     );
     const items = await Promise.all(tasks);
     renderResults(items);
+    addToHistory(prompt, size, items);
   } catch (e) {
     $("resultBody").innerHTML = '<div id="stage"><div class="result-title">生成失败</div><div class="result-sub">请检查 API Key 或稍后重试</div><div class="err">' + (e.message || String(e)).replace(/</g,"&lt;") + '</div></div>';
   } finally {
