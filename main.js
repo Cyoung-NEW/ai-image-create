@@ -90,6 +90,31 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
     --accent-b: #f0abfc;
     --accent-c: #f9a8d4;
   }
+  [data-theme="light"] {
+    --bg-0: #f7f5fb;
+    --bg-1: #ffffff;
+    --panel: rgba(255, 255, 255, 0.75);
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --text: #1a1b2e;
+    --muted: #5b6072;
+    --muted-2: #8b8fa3;
+  }
+  [data-theme="light"] body {
+    background:
+      radial-gradient(900px 500px at 8% -5%, rgba(168,85,247,0.12), transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, rgba(236,72,153,0.10), transparent 60%),
+      linear-gradient(180deg, #f7f5fb, #ffffff);
+  }
+  [data-theme="light"] .input,
+  [data-theme="light"] .select,
+  [data-theme="light"] .textarea { background: rgba(0,0,0,0.02); }
+  [data-theme="light"] .icon-btn { background: rgba(0,0,0,0.03); }
+  [data-theme="light"] .icon-btn:hover { background: rgba(0,0,0,0.06); }
+  [data-theme="light"] .opt { background: rgba(0,0,0,0.015); }
+  [data-theme="light"] .opt:hover { background: rgba(0,0,0,0.04); }
+  [data-theme="light"] .tip,
+  [data-theme="light"] .img-card { background: rgba(0,0,0,0.02); }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -190,7 +215,7 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   <header class="topbar">
     <div class="logo"><span>✦</span> AI Image Generator</div>
     <div class="topbar-right">
-      <button class="icon-btn" title="切换主题">☼</button>
+      <button class="icon-btn" id="themeBtn" title="切换主题">☼</button>
       <button class="icon-btn">ⓘ 关于</button>
     </div>
   </header>
@@ -205,7 +230,7 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
       <div class="panel-title"><span class="ic">⚙</span> 设置</div>
 
       <div class="label">API 提供商</div>
-      <select class="select" id="provider"><option>🔒 自定义 API（速创）</option></select>
+      <select class="select" id="provider"><option>🔒 Cyoung</option></select>
 
       <div class="label">API Key</div>
       <div class="input-wrap">
@@ -274,6 +299,24 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
 <script>
 const $ = id => document.getElementById(id);
 const STATUS_TEXT = {0:"初始化", 1:"生成中", 2:"成功", 3:"失败"};
+
+const THEME_KEY = "ui_theme";
+function applyTheme(theme) {
+  if (theme === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+    $("themeBtn").textContent = "☾";
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+    $("themeBtn").textContent = "☼";
+  }
+}
+applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+$("themeBtn").addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
+
 const KEY_STORE = "wuyin_api_key";
 $("apiKey").value = localStorage.getItem(KEY_STORE) || "";
 $("apiKey").addEventListener("input", e => localStorage.setItem(KEY_STORE, e.target.value));
