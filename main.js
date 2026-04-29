@@ -278,30 +278,45 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .submit:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(201,160,100,0.38); }
   .submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   .result-panel { min-height: 600px; display: flex; flex-direction: column; }
-  .result-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
-  .loader-stage { position: relative; width: 100%; max-width: 720px; aspect-ratio: 16 / 10; border-radius: 22px; overflow: hidden; background: #1f2027; box-shadow: 0 10px 40px rgba(0,0,0,0.25); margin: 0 auto; }
-  .loader-stage .blob { position: absolute; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; opacity: 0.7; will-change: transform; }
-  .loader-stage .lb1 { width:55%; aspect-ratio:1; background:#5a7a5a; top:-12%; left:-10%; animation: blob-a 9s ease-in-out infinite alternate; }
-  .loader-stage .lb2 { width:50%; aspect-ratio:1; background:#4a6878; bottom:-12%; right:-10%; animation: blob-b 11s ease-in-out infinite alternate; }
-  .loader-stage .lb3 { width:42%; aspect-ratio:1; background:#7a6a4a; top:18%; right:5%; animation: blob-c 8s ease-in-out infinite alternate; }
-  .loader-stage .lb4 { width:38%; aspect-ratio:1; background:#5a7878; bottom:8%; left:8%; animation: blob-d 12s ease-in-out infinite alternate; }
-  [data-theme="light"] .loader-stage { background: #ebe6dc; box-shadow: 0 10px 40px rgba(60,40,20,0.10); }
-  [data-theme="light"] .loader-stage .blob { mix-blend-mode: multiply; opacity: 0.85; filter: blur(55px); }
-  [data-theme="light"] .loader-stage .lb1 { background:#bccab2; }
-  [data-theme="light"] .loader-stage .lb2 { background:#a7b8c5; }
-  [data-theme="light"] .loader-stage .lb3 { background:#d4cab8; }
-  [data-theme="light"] .loader-stage .lb4 { background:#c8d6cd; }
-  [data-theme="warm"] .loader-stage { background: #f5e6d3; box-shadow: 0 10px 40px rgba(150,80,60,0.14); }
-  [data-theme="warm"] .loader-stage .blob { mix-blend-mode: multiply; opacity: 0.8; filter: blur(55px); }
-  [data-theme="warm"] .loader-stage .lb1 { background:#f4b8a8; }
-  [data-theme="warm"] .loader-stage .lb2 { background:#e8c8a0; }
-  [data-theme="warm"] .loader-stage .lb3 { background:#f0d4c0; }
-  [data-theme="warm"] .loader-stage .lb4 { background:#e8b8c8; }
-  .loader-stage.empty { opacity: 0.7; }
-  @keyframes blob-a { 0%{transform:translate(0,0) scale(1);} 50%{transform:translate(40%,55%) scale(1.35);} 100%{transform:translate(15%,25%) scale(0.85);} }
-  @keyframes blob-b { 0%{transform:translate(0,0) scale(1.1);} 50%{transform:translate(-45%,-50%) scale(0.85);} 100%{transform:translate(-15%,-25%) scale(1.25);} }
-  @keyframes blob-c { 0%{transform:translate(-20%,0) scale(1);} 50%{transform:translate(30%,-40%) scale(1.45);} 100%{transform:translate(-10%,20%) scale(0.75);} }
-  @keyframes blob-d { 0%{transform:translate(0,20%) scale(0.85);} 50%{transform:translate(45%,-35%) scale(1.3);} 100%{transform:translate(-25%,10%) scale(1.15);} }
+  .result-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; position: relative; overflow: hidden; }
+  #stage { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+  .loader-stage { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .loader-stage.empty { opacity: 0.55; }
+  .pulse-center { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; transform: translate(-50%,-50%); }
+  .pulse-center::before, .pulse-center::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid var(--accent-a);
+    animation: pulse-ring 2.6s ease-out infinite;
+  }
+  .pulse-center::after { animation-delay: 1.3s; }
+  .pulse-core {
+    position: absolute; top: 50%; left: 50%; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--accent-a);
+    transform: translate(-50%,-50%);
+    box-shadow: 0 0 24px var(--accent-a), 0 0 48px rgba(212,184,150,0.4);
+    animation: pulse-core 2.6s ease-in-out infinite;
+  }
+  .pulse-dot {
+    position: absolute; left: 50%; top: 50%; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--accent-b); opacity: 0;
+    box-shadow: 0 0 10px var(--accent-b);
+    animation: pulse-dot-anim 2.6s ease-out infinite;
+  }
+  [data-theme="light"] .pulse-core { box-shadow: 0 0 18px rgba(184,148,106,0.6); }
+  [data-theme="light"] .pulse-dot { box-shadow: 0 0 8px rgba(201,160,100,0.5); }
+  @keyframes pulse-ring {
+    0%   { transform: scale(0.3); opacity: 1; border-width: 3px; }
+    100% { transform: scale(14); opacity: 0; border-width: 1px; }
+  }
+  @keyframes pulse-core {
+    0%,100% { transform: translate(-50%,-50%) scale(1); }
+    50%     { transform: translate(-50%,-50%) scale(1.6); }
+  }
+  @keyframes pulse-dot-anim {
+    0%,100% { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+    40%     { opacity: 1; transform: var(--end) scale(1); }
+    85%     { opacity: 0; transform: var(--end) scale(0.5); }
+  }
   .result-title { font-size: 22px; font-weight: 600; margin-top: 18px; }
   .result-sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
   .tip { margin-top: 22px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 11px 16px; font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
@@ -451,7 +466,19 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
 const $ = id => document.getElementById(id);
 const STATUS_TEXT = {0:"初始化", 1:"生成中", 2:"成功", 3:"失败"};
 
-const LOADER_HTML = '<div class="blob lb1"></div><div class="blob lb2"></div><div class="blob lb3"></div><div class="blob lb4"></div>';
+const LOADER_HTML = (() => {
+  let dots = '';
+  const N = 18;
+  for (let i = 0; i < N; i++) {
+    const angle = (i / N) * Math.PI * 2 + Math.random() * 0.4;
+    const dist = 90 + Math.random() * 140;
+    const x = Math.cos(angle) * dist;
+    const y = Math.sin(angle) * dist;
+    const delay = (Math.random() * 2.6).toFixed(2);
+    dots += '<div class="pulse-dot" style="--end: translate(calc(-50% + ' + x.toFixed(0) + 'px), calc(-50% + ' + y.toFixed(0) + 'px)); animation-delay: ' + delay + 's;"></div>';
+  }
+  return '<div class="pulse-center"></div><div class="pulse-core"></div>' + dots;
+})();
 
 const THEME_KEY = "ui_theme";
 function applyTheme(theme) {
