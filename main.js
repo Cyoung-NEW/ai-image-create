@@ -281,36 +281,41 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .result-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; position: relative; overflow: hidden; }
   #stage { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
   .loader-stage { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .loader-stage.empty { opacity: 0.55; }
-  .pulse-center { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; transform: translate(-50%,-50%); }
-  .pulse-center::before, .pulse-center::after {
-    content: ''; position: absolute; inset: 0; border-radius: 50%;
-    border: 2px solid var(--accent-a);
-    animation: pulse-ring 2.6s ease-out infinite;
+  .loader-stage.empty { opacity: 0.5; }
+  .pulse-ring {
+    position: absolute; top: 50%; left: 50%; width: 80px; height: 80px;
+    margin: -40px 0 0 -40px;
+    border-radius: 50%; border: 2px solid var(--accent-a);
+    opacity: 0;
+    animation: pulse-ring 3.6s linear infinite;
   }
-  .pulse-center::after { animation-delay: 1.3s; }
+  .pulse-ring.r2 { animation-delay: -1.2s; }
+  .pulse-ring.r3 { animation-delay: -2.4s; }
   .pulse-core {
-    position: absolute; top: 50%; left: 50%; width: 14px; height: 14px;
+    position: absolute; top: 50%; left: 50%; width: 16px; height: 16px;
+    margin: -8px 0 0 -8px;
     border-radius: 50%; background: var(--accent-a);
-    transform: translate(-50%,-50%);
-    box-shadow: 0 0 24px var(--accent-a), 0 0 48px rgba(212,184,150,0.4);
-    animation: pulse-core 2.6s ease-in-out infinite;
+    box-shadow: 0 0 28px var(--accent-a), 0 0 56px rgba(212,184,150,0.4);
+    animation: pulse-core 1.8s ease-in-out infinite;
   }
   .pulse-dot {
     position: absolute; left: 50%; top: 50%; width: 6px; height: 6px;
     border-radius: 50%; background: var(--accent-b); opacity: 0;
     box-shadow: 0 0 10px var(--accent-b);
-    animation: pulse-dot-anim 2.6s ease-out infinite;
+    animation: pulse-dot-anim 3s ease-out infinite;
   }
   [data-theme="light"] .pulse-core { box-shadow: 0 0 18px rgba(184,148,106,0.6); }
   [data-theme="light"] .pulse-dot { box-shadow: 0 0 8px rgba(201,160,100,0.5); }
   @keyframes pulse-ring {
-    0%   { transform: scale(0.3); opacity: 1; border-width: 3px; }
-    100% { transform: scale(14); opacity: 0; border-width: 1px; }
+    0%   { transform: scale(0.2); opacity: 0; border-width: 3px; }
+    8%   { opacity: 1; }
+    60%  { opacity: 0.75; }
+    85%  { opacity: 0.4; border-width: 1.5px; }
+    100% { transform: scale(20); opacity: 0; border-width: 1px; }
   }
   @keyframes pulse-core {
-    0%,100% { transform: translate(-50%,-50%) scale(1); }
-    50%     { transform: translate(-50%,-50%) scale(1.6); }
+    0%,100% { transform: scale(1); }
+    50%     { transform: scale(1.6); }
   }
   @keyframes pulse-dot-anim {
     0%,100% { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
@@ -468,16 +473,16 @@ const STATUS_TEXT = {0:"初始化", 1:"生成中", 2:"成功", 3:"失败"};
 
 const LOADER_HTML = (() => {
   let dots = '';
-  const N = 18;
+  const N = 24;
   for (let i = 0; i < N; i++) {
-    const angle = (i / N) * Math.PI * 2 + Math.random() * 0.4;
-    const dist = 90 + Math.random() * 140;
+    const angle = (i / N) * Math.PI * 2 + Math.random() * 0.3;
+    const dist = 140 + Math.random() * 260;
     const x = Math.cos(angle) * dist;
     const y = Math.sin(angle) * dist;
-    const delay = (Math.random() * 2.6).toFixed(2);
+    const delay = (Math.random() * 3).toFixed(2);
     dots += '<div class="pulse-dot" style="--end: translate(calc(-50% + ' + x.toFixed(0) + 'px), calc(-50% + ' + y.toFixed(0) + 'px)); animation-delay: ' + delay + 's;"></div>';
   }
-  return '<div class="pulse-center"></div><div class="pulse-core"></div>' + dots;
+  return '<div class="pulse-ring r1"></div><div class="pulse-ring r2"></div><div class="pulse-ring r3"></div><div class="pulse-core"></div>' + dots;
 })();
 
 const THEME_KEY = "ui_theme";
@@ -657,7 +662,7 @@ async function waitForOne(apiKey, prompt, size, urls, startTs, onPhase) {
       return { tid, urls };
     }
     if (status === 3) throw new Error("生成失败：" + ((d && d.message) || JSON.stringify(resp)));
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 3000));
   }
 }
 
