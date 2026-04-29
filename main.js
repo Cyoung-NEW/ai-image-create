@@ -180,6 +180,36 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
     --muted: #5b6072;
     --muted-2: #8b8fa3;
   }
+  [data-theme="warm"] {
+    --bg-0: #fff1e6;
+    --bg-1: #ffe4d6;
+    --panel: rgba(255, 255, 255, 0.7);
+    --border: rgba(120, 60, 60, 0.08);
+    --border-strong: rgba(120, 60, 60, 0.16);
+    --text: #3d2a26;
+    --muted: #8a6a62;
+    --muted-2: #a88a82;
+    --accent-a: #ec4899;
+    --accent-b: #f97316;
+    --accent-c: #fbbf24;
+  }
+  [data-theme="warm"] body {
+    background:
+      radial-gradient(900px 500px at 8% -5%, rgba(251,113,133,0.18), transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, rgba(252,211,77,0.16), transparent 60%),
+      linear-gradient(180deg, #fff1e6, #ffe4d6);
+  }
+  [data-theme="warm"] .input,
+  [data-theme="warm"] .select,
+  [data-theme="warm"] .textarea { background: rgba(255,255,255,0.5); }
+  [data-theme="warm"] .icon-btn { background: rgba(255,255,255,0.5); }
+  [data-theme="warm"] .opt { background: rgba(255,255,255,0.4); }
+  [data-theme="warm"] .opt:hover { background: rgba(255,255,255,0.7); }
+  [data-theme="warm"] .tip,
+  [data-theme="warm"] .img-card,
+  [data-theme="warm"] .upload-zone,
+  [data-theme="warm"] .upload-item,
+  [data-theme="warm"] .hist-card { background: rgba(255,255,255,0.5); }
   [data-theme="light"] body {
     background:
       radial-gradient(900px 500px at 8% -5%, rgba(168,85,247,0.12), transparent 60%),
@@ -211,9 +241,13 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
     background: linear-gradient(90deg, #c084fc, #f0abfc, #f9a8d4);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .topbar-right { display:flex; gap: 10px; }
+  .topbar-right { display:flex; gap: 10px; align-items: center; }
   .icon-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); padding: 7px 12px; border-radius: 9px; font-size: 13px; cursor: pointer; }
   .icon-btn:hover { background: rgba(255,255,255,0.07); }
+  .theme-picker { display: flex; gap: 4px; padding: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 11px; }
+  .theme-btn { background: transparent; border: 0; color: var(--muted); padding: 6px 11px; border-radius: 8px; font-size: 12.5px; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 5px; }
+  .theme-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .theme-btn.active { background: linear-gradient(90deg, var(--accent-a), var(--accent-b)); color: #fff; box-shadow: 0 4px 12px rgba(192,132,252,0.25); }
   .hero { text-align: center; padding: 28px 20px 14px; }
   .hero h1 { margin: 0; font-size: 38px; font-weight: 700; letter-spacing: 1px;
     background: linear-gradient(90deg, #b388ff, #e9a3ff 50%, #ffaad4);
@@ -221,11 +255,13 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
     display: inline-flex; align-items: center; gap: 10px;
   }
   .hero p { color: var(--muted); font-size: 14px; margin-top: 10px; }
-  .layout { display: grid; grid-template-columns: 380px 1fr; gap: 22px; max-width: 1240px; margin: 18px auto 40px; padding: 0 24px; }
+  .layout { display: grid; grid-template-columns: 380px 1fr; gap: 22px; max-width: 1240px; margin: 18px auto 40px; padding: 0 24px; align-items: start; }
+  .right-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
   @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
   .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px; backdrop-filter: blur(14px); }
   .panel-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; margin-bottom: 18px; }
   .panel-title .ic { color: var(--accent-a); }
+  .result-meta-inline { color: var(--muted-2); font-weight: 400; font-size: 12px; margin-left: 6px; }
   .label { display:flex; justify-content: space-between; align-items: center; font-size: 13px; margin: 16px 0 8px; font-weight: 500; }
   .label .muted { color: var(--muted-2); font-weight: 400; font-size: 12px; }
   .input, .select, .textarea { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-strong); border-radius: 10px; padding: 11px 13px; color: var(--text); font-size: 13px; outline: none; font-family: inherit; transition: border-color .2s, box-shadow .2s; }
@@ -303,7 +339,6 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   @keyframes fadeUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
   .err { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(255,90,90,0.08); border: 1px solid rgba(255,90,90,0.25); color: #ffb3b3; font-size: 13px; white-space: pre-wrap; text-align: left; max-width: 520px; }
   .hidden { display: none !important; }
-  .history { max-width: 1240px; margin: 0 auto 40px; padding: 0 24px; }
   .history-head { display:flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .history-head .title { display:flex; align-items:center; gap:8px; font-size: 15px; font-weight: 600; }
   .history-head .title .ic { color: var(--accent-a); }
@@ -312,7 +347,9 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .hist-card { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: rgba(0,0,0,0.3); cursor: pointer; transition: transform .15s, box-shadow .2s; }
   .hist-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(192,132,252,0.15); }
   .hist-card img { display:block; width: 100%; height: 180px; object-fit: cover; }
-  .hist-card .hist-prompt { position: absolute; left:0; right:0; bottom:0; padding: 8px 10px; font-size: 11px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.78)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hist-card .hist-meta { position: absolute; left:0; right:0; bottom:0; padding: 6px 10px; font-size: 11px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.78)); display: flex; justify-content: space-between; align-items: center; }
+  .hist-card .hist-meta .hist-time { font-weight: 500; }
+  .hist-card .hist-meta .hist-size { opacity: 0.85; }
   .hist-empty { color: var(--muted-2); font-size: 13px; text-align: center; padding: 30px; border: 1px dashed var(--border); border-radius: 12px; }
   .footer { border-top: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted-2); }
   .footer .heart { color: #ec4899; }
@@ -322,7 +359,11 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   <header class="topbar">
     <div class="logo"><span>✦</span> AI Image Generator</div>
     <div class="topbar-right">
-      <button class="icon-btn" id="themeBtn" title="切换主题">☼</button>
+      <div class="theme-picker" id="themePicker">
+        <button class="theme-btn" data-theme="dark">🌙 暗色</button>
+        <button class="theme-btn" data-theme="light">☀ 亮色</button>
+        <button class="theme-btn" data-theme="warm">🍂 暖色</button>
+      </div>
       <button class="icon-btn">ⓘ 关于</button>
     </div>
   </header>
@@ -382,37 +423,39 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
       <button class="submit" id="genBtn">✦ 生成图像</button>
     </aside>
 
-    <section class="panel result-panel">
-      <div class="panel-title"><span class="ic">🖼</span> 生成结果</div>
-      <div class="result-body" id="resultBody">
-        <div id="stage" class="empty">
-          <div class="loader-stage">
-            <div class="ring"></div>
-            <div class="stars">
-              <span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span>
-              <i></i><i></i><i></i>
+    <div class="right-col">
+      <section class="panel result-panel">
+        <div class="panel-title"><span class="ic">🖼</span> 生成结果 <span class="result-meta-inline" id="resultMetaInline"></span></div>
+        <div class="result-body" id="resultBody">
+          <div id="stage" class="empty">
+            <div class="loader-stage">
+              <div class="ring"></div>
+              <div class="stars">
+                <span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span>
+                <i></i><i></i><i></i>
+              </div>
             </div>
+            <div class="result-title" id="stageTitle">等待生成中...</div>
+            <div class="result-sub" id="stageSub">点击左侧"生成图像"开始创作</div>
+            <div class="tip" id="tipBox">
+              <span class="bulb">💡</span>
+              <span>提示：生成过程通常需要 30~60 秒，请耐心等待</span>
+              <span class="elapsed hidden" id="elapsed"></span>
+            </div>
+            <div id="error" class="err hidden"></div>
           </div>
-          <div class="result-title" id="stageTitle">等待生成中...</div>
-          <div class="result-sub" id="stageSub">点击左侧"生成图像"开始创作</div>
-          <div class="tip" id="tipBox">
-            <span class="bulb">💡</span>
-            <span>提示：生成过程通常需要 30~60 秒，请耐心等待</span>
-            <span class="elapsed hidden" id="elapsed"></span>
-          </div>
-          <div id="error" class="err hidden"></div>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
 
-  <section class="history">
-    <div class="history-head">
-      <div class="title"><span class="ic">🕘</span> 历史记录 <span class="count" id="histCount"></span></div>
-      <button class="icon-btn" id="clearHistBtn">清空</button>
+      <section class="panel">
+        <div class="history-head">
+          <div class="panel-title" style="margin:0"><span class="ic">🕘</span> 历史记录 <span class="count" id="histCount" style="color:var(--muted-2);font-weight:400;font-size:12px;margin-left:6px;"></span></div>
+          <button class="icon-btn" id="clearHistBtn">清空</button>
+        </div>
+        <div id="historyBody"></div>
+      </section>
     </div>
-    <div id="historyBody"></div>
-  </section>
+  </main>
 
   <footer class="footer">
     <div>© 2024 AI Image Generator. All rights reserved.</div>
@@ -425,19 +468,18 @@ const STATUS_TEXT = {0:"初始化", 1:"生成中", 2:"成功", 3:"失败"};
 
 const THEME_KEY = "ui_theme";
 function applyTheme(theme) {
-  if (theme === "light") {
-    document.documentElement.setAttribute("data-theme", "light");
-    $("themeBtn").textContent = "☾";
-  } else {
-    document.documentElement.removeAttribute("data-theme");
-    $("themeBtn").textContent = "☼";
-  }
+  if (theme === "dark") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", theme);
+  $("themePicker").querySelectorAll(".theme-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.theme === theme);
+  });
 }
 applyTheme(localStorage.getItem(THEME_KEY) || "dark");
-$("themeBtn").addEventListener("click", () => {
-  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
-  localStorage.setItem(THEME_KEY, next);
-  applyTheme(next);
+$("themePicker").addEventListener("click", e => {
+  const btn = e.target.closest(".theme-btn");
+  if (!btn) return;
+  localStorage.setItem(THEME_KEY, btn.dataset.theme);
+  applyTheme(btn.dataset.theme);
 });
 
 const KEY_STORE = "wuyin_api_key";
@@ -445,6 +487,19 @@ $("apiKey").value = localStorage.getItem(KEY_STORE) || "";
 $("apiKey").addEventListener("input", e => localStorage.setItem(KEY_STORE, e.target.value));
 $("eyeBtn").addEventListener("click", () => { const el = $("apiKey"); el.type = el.type === "password" ? "text" : "password"; });
 $("prompt").addEventListener("input", e => { $("charCount").textContent = e.target.value.length + " / 1000"; });
+
+const PROMPT_INSPIRATIONS = [
+  "山顶上看日落的女孩，粉色天空，云海，治愈系风格",
+  "霓虹雨夜的赛博朋克街道，反光的水洼，电影感",
+  "森林中漂浮的发光水母，梦幻奇幻，超现实主义",
+  "宇航员坐在月球上吃泡面，星空背景，搞怪写实",
+  "京都樱花树下的猫咪，水彩画风，柔和光线",
+  "未来城市，悬浮的玻璃建筑，黄昏，电影海报构图",
+  "复古海报风格的咖啡馆，暖色调，70 年代美学",
+  "极简主义的山脉剪影，渐变天空，极简平面设计",
+];
+const ph = PROMPT_INSPIRATIONS[Math.floor(Math.random() * PROMPT_INSPIRATIONS.length)];
+$("prompt").placeholder = "💡 试试：" + ph + "\n\n（点击此处开始输入）";
 
 function bindGrid(gridId) {
   const g = $(gridId);
@@ -592,6 +647,15 @@ async function waitForOne(apiKey, prompt, size, urls, startTs, onPhase) {
   }
 }
 
+const SIZE_DIMS = {"1:1":"1024×1024","16:9":"1792×1024","9:16":"1024×1792","4:3":"1365×1024","3:4":"1024×1365","2:3":"1024×1536"};
+function fmtTime(ts) {
+  const d = new Date(ts), now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  const hm = pad(d.getHours()) + ":" + pad(d.getMinutes());
+  if (d.toDateString() === now.toDateString()) return "今天 " + hm;
+  return (d.getMonth()+1) + "/" + d.getDate() + " " + hm;
+}
+
 const HIST_KEY = "gen_history_v1";
 const HIST_MAX = 50;
 function loadHistory() {
@@ -611,9 +675,12 @@ function renderHistory() {
   $("histCount").textContent = list.length ? "（" + list.length + "）" : "";
   if (!list.length) { body.innerHTML = '<div class="hist-empty">还没有生成记录，去左边创作第一张吧 ✦</div>'; return; }
   body.innerHTML = '<div class="history-grid">' + list.map(it =>
-    '<div class="hist-card" data-url="' + it.url + '" title="' + (it.prompt || "").replace(/"/g, "&quot;") + '">' +
+    '<div class="hist-card" data-url="' + it.url + '" title="' + fmtTime(it.ts) + '">' +
       '<img src="' + it.url + '" loading="lazy" alt="" />' +
-      '<div class="hist-prompt">' + ((it.prompt || "").replace(/</g, "&lt;")) + '</div>' +
+      '<div class="hist-meta">' +
+        '<span class="hist-time">' + fmtTime(it.ts) + '</span>' +
+        '<span class="hist-size">' + (SIZE_DIMS[it.size] || it.size || "") + '</span>' +
+      '</div>' +
     '</div>'
   ).join("") + '</div>';
 }
@@ -629,12 +696,15 @@ $("clearHistBtn").addEventListener("click", () => {
 });
 renderHistory();
 
-function renderResults(items) {
+function renderResults(items, size) {
   const body = $("resultBody");
+  const total = items.reduce((s, it) => s + it.urls.length, 0);
+  const dim = SIZE_DIMS[size] || size || "";
+  $("resultMetaInline").textContent = total ? "· " + fmtTime(Date.now()) + " · " + dim + " · 共 " + total + " 张" : "";
   body.innerHTML = '<div class="grid-imgs">' +
     items.map(it => it.urls.map(u =>
       '<div class="img-card"><img src="' + u + '" alt="generated" />' +
-      '<div class="img-meta"><span>ID: ' + it.tid.slice(0, 14) + '…</span>' +
+      '<div class="img-meta"><span>' + fmtTime(Date.now()) + ' · ' + dim + '</span>' +
       '<a href="' + u + '" target="_blank" rel="noopener">原图 ↗</a></div></div>'
     ).join("")).join("") + '</div>';
 }
@@ -677,7 +747,7 @@ $("genBtn").addEventListener("click", async () => {
       })
     );
     const items = await Promise.all(tasks);
-    renderResults(items);
+    renderResults(items, size);
     addToHistory(prompt, size, items);
     if (okUploads.length) {
       deleteUploads(okUploads.map(u => u.key));
