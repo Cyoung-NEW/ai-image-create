@@ -394,8 +394,8 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
         <div class="result-head">
           <div class="panel-title" style="margin:0"><span class="ic">🖼</span> 生成结果 <span class="result-meta-inline" id="resultMetaInline"></span></div>
           <div class="result-actions">
-            <button class="icon-btn" id="regenBtn">🔄 重新制作</button>
-            <button class="icon-btn" id="clearResultBtn">🗑 清空窗口</button>
+            <button class="icon-btn" id="regenBtn">重新制作</button>
+            <button class="icon-btn" id="clearResultBtn">清空窗口</button>
           </div>
         </div>
         <div class="result-body" id="resultBody">
