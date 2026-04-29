@@ -279,15 +279,29 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   .result-panel { min-height: 600px; display: flex; flex-direction: column; }
   .result-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
-  .loader-stage { position: relative; width: 260px; height: 260px; display:flex; align-items:center; justify-content: center; }
-  .loader-svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 18px rgba(201,160,100,0.40)); transition: filter .4s; }
-  [data-theme="light"] .loader-svg { filter: drop-shadow(0 0 18px rgba(201,160,100,0.50)); }
-  #ringGrad .grad-a { stop-color: var(--accent-a); }
-  #ringGrad .grad-b { stop-color: var(--accent-b); }
-  #ringGrad .grad-c { stop-color: var(--accent-c); }
-  .loader-ring { stroke-linecap: round; stroke-linejoin: round; }
-  .loader-particle { fill: var(--accent-c); }
-  .loader-stage.empty .loader-svg { opacity: .55; }
+  .loader-stage { position: relative; width: 320px; height: 220px; border-radius: 22px; overflow: hidden; background: #1f2027; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+  .loader-stage .blob { position: absolute; border-radius: 50%; filter: blur(45px); mix-blend-mode: screen; opacity: 0.55; }
+  .loader-stage .lb1 { width:220px; height:220px; background:#5a7a5a; top:-40px; left:-30px; animation: blob-a 16s ease-in-out infinite alternate; }
+  .loader-stage .lb2 { width:200px; height:200px; background:#4a6878; bottom:-40px; right:-30px; animation: blob-b 18s ease-in-out infinite alternate; }
+  .loader-stage .lb3 { width:170px; height:170px; background:#7a6a4a; top:50px; right:10px; animation: blob-c 14s ease-in-out infinite alternate; }
+  .loader-stage .lb4 { width:150px; height:150px; background:#5a7878; bottom:25px; left:30px; animation: blob-d 20s ease-in-out infinite alternate; }
+  [data-theme="light"] .loader-stage { background: #ebe6dc; box-shadow: 0 10px 40px rgba(60,40,20,0.10); }
+  [data-theme="light"] .loader-stage .blob { mix-blend-mode: multiply; opacity: 0.9; filter: blur(38px); }
+  [data-theme="light"] .loader-stage .lb1 { background:#bccab2; width:230px; height:230px; }
+  [data-theme="light"] .loader-stage .lb2 { background:#a7b8c5; width:210px; height:210px; }
+  [data-theme="light"] .loader-stage .lb3 { background:#d4cab8; width:180px; height:180px; }
+  [data-theme="light"] .loader-stage .lb4 { background:#c8d6cd; width:160px; height:160px; }
+  [data-theme="warm"] .loader-stage { background: #f5e6d3; box-shadow: 0 10px 40px rgba(150,80,60,0.14); }
+  [data-theme="warm"] .loader-stage .blob { mix-blend-mode: multiply; opacity: 0.85; filter: blur(40px); }
+  [data-theme="warm"] .loader-stage .lb1 { background:#f4b8a8; }
+  [data-theme="warm"] .loader-stage .lb2 { background:#e8c8a0; }
+  [data-theme="warm"] .loader-stage .lb3 { background:#f0d4c0; }
+  [data-theme="warm"] .loader-stage .lb4 { background:#e8b8c8; }
+  .loader-stage.empty { opacity: 0.65; }
+  @keyframes blob-a { 0%{transform:translate(0,0) scale(1);} 50%{transform:translate(60px,80px) scale(1.3);} 100%{transform:translate(20px,40px) scale(0.9);} }
+  @keyframes blob-b { 0%{transform:translate(0,0) scale(1.1);} 50%{transform:translate(-50px,-60px) scale(0.9);} 100%{transform:translate(-20px,-30px) scale(1.2);} }
+  @keyframes blob-c { 0%{transform:translate(-30px,0) scale(1);} 50%{transform:translate(40px,-50px) scale(1.4);} 100%{transform:translate(-10px,20px) scale(0.8);} }
+  @keyframes blob-d { 0%{transform:translate(0,30px) scale(0.9);} 50%{transform:translate(50px,-40px) scale(1.2);} 100%{transform:translate(-30px,10px) scale(1.1);} }
   .result-title { font-size: 22px; font-weight: 600; margin-top: 18px; }
   .result-sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
   .tip { margin-top: 22px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 11px 16px; font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
@@ -401,23 +415,10 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
         <div class="result-body" id="resultBody">
           <div id="stage" class="empty">
             <div class="loader-stage empty">
-              <svg class="loader-svg" viewBox="0 0 200 200">
-                <defs>
-                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" class="grad-a" />
-                    <stop offset="50%" class="grad-b" />
-                    <stop offset="100%" class="grad-c" />
-                  </linearGradient>
-                </defs>
-                <path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.4" />
-                <path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.1" />
-                <path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="0.9" />
-                <circle class="loader-particle" r="0.9" /><circle class="loader-particle" r="1.1" />
-                <circle class="loader-particle" r="0.8" /><circle class="loader-particle" r="1.0" />
-                <circle class="loader-particle" r="1.2" /><circle class="loader-particle" r="0.9" />
-                <circle class="loader-particle" r="1.1" /><circle class="loader-particle" r="0.8" />
-                <circle class="loader-particle" r="1.0" /><circle class="loader-particle" r="0.9" />
-              </svg>
+              <div class="blob lb1"></div>
+              <div class="blob lb2"></div>
+              <div class="blob lb3"></div>
+              <div class="blob lb4"></div>
             </div>
             <div class="result-title" id="stageTitle">等待生成中...</div>
             <div class="result-sub" id="stageSub">点击左侧"生成图像"开始创作</div>
@@ -450,69 +451,7 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
 const $ = id => document.getElementById(id);
 const STATUS_TEXT = {0:"初始化", 1:"生成中", 2:"成功", 3:"失败"};
 
-const LOADER_SVG =
-  '<svg class="loader-svg" viewBox="0 0 200 200">' +
-  '<defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">' +
-  '<stop offset="0%" class="grad-a" /><stop offset="50%" class="grad-b" /><stop offset="100%" class="grad-c" />' +
-  '</linearGradient></defs>' +
-  '<path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.4" />' +
-  '<path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.1" />' +
-  '<path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="0.9" />' +
-  '<circle class="loader-particle" r="0.9" /><circle class="loader-particle" r="1.1" />' +
-  '<circle class="loader-particle" r="0.8" /><circle class="loader-particle" r="1.0" />' +
-  '<circle class="loader-particle" r="1.2" /><circle class="loader-particle" r="0.9" />' +
-  '<circle class="loader-particle" r="1.1" /><circle class="loader-particle" r="0.8" />' +
-  '<circle class="loader-particle" r="1.0" /><circle class="loader-particle" r="0.9" />' +
-  '</svg>';
-
-let _loaderRaf = null;
-let _loaderStart = 0;
-function startLoader() {
-  if (_loaderRaf) cancelAnimationFrame(_loaderRaf);
-  _loaderStart = performance.now();
-  function frame(now) {
-    const svg = document.querySelector(".loader-svg");
-    if (!svg) { _loaderRaf = null; return; }
-    const t = (now - _loaderStart) / 1000;
-    const rings = svg.querySelectorAll(".loader-ring");
-    const particles = svg.querySelectorAll(".loader-particle");
-    rings.forEach((ring, idx) => {
-      const baseR = 48 + idx * 14;
-      const amp = 3.2 + idx * 1.1;
-      const freq = 4 + idx * 1.3;
-      const phase = t * (0.7 + idx * 0.18);
-      const rot = t * (0.15 + idx * 0.05) * (idx % 2 === 0 ? 1 : -1);
-      const N = 96;
-      let d = "";
-      for (let i = 0; i <= N; i++) {
-        const theta = (i / N) * Math.PI * 2 + rot;
-        const r = baseR + amp * Math.sin(freq * theta + phase) + 1.2 * Math.sin(2 * theta - phase * 0.6);
-        const x = 100 + r * Math.cos(theta);
-        const y = 100 + r * Math.sin(theta);
-        d += (i === 0 ? "M" : "L") + x.toFixed(2) + "," + y.toFixed(2) + " ";
-      }
-      d += "Z";
-      ring.setAttribute("d", d);
-      const breathe = 0.55 + 0.45 * (Math.sin(t * 1.1 + idx * 0.85) * 0.5 + 0.5);
-      ring.setAttribute("opacity", breathe.toFixed(3));
-    });
-    particles.forEach((p, idx) => {
-      const orbitR = 14 + (idx % 4) * 6;
-      const speed = 0.25 + (idx % 5) * 0.06;
-      const phase = idx * 1.37;
-      const wobble = 1.5 * Math.sin(t * 1.6 + idx);
-      const x = 100 + (orbitR + wobble) * Math.cos(t * speed + phase);
-      const y = 100 + (orbitR + wobble) * Math.sin(t * speed * 1.1 + phase) * 0.95;
-      p.setAttribute("cx", x.toFixed(2));
-      p.setAttribute("cy", y.toFixed(2));
-      const tw = 0.35 + 0.65 * (Math.sin(t * 2.2 + idx * 0.9) * 0.5 + 0.5);
-      p.setAttribute("opacity", tw.toFixed(3));
-    });
-    _loaderRaf = requestAnimationFrame(frame);
-  }
-  _loaderRaf = requestAnimationFrame(frame);
-}
-startLoader();
+const LOADER_HTML = '<div class="blob lb1"></div><div class="blob lb2"></div><div class="blob lb3"></div><div class="blob lb4"></div>';
 
 const THEME_KEY = "ui_theme";
 function applyTheme(theme) {
@@ -522,7 +461,7 @@ function applyTheme(theme) {
     b.classList.toggle("active", b.dataset.theme === theme);
   });
 }
-applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+applyTheme(localStorage.getItem(THEME_KEY) || "light");
 $("themePicker").addEventListener("click", e => {
   const btn = e.target.closest(".theme-btn");
   if (!btn) return;
@@ -747,14 +686,13 @@ renderHistory();
 $("clearResultBtn").addEventListener("click", () => {
   $("resultBody").innerHTML =
     '<div id="stage" class="empty">' +
-    '  <div class="loader-stage empty">' + LOADER_SVG + '</div>' +
+    '  <div class="loader-stage empty">' + LOADER_HTML + '</div>' +
     '  <div class="result-title" id="stageTitle">等待生成中...</div>' +
     '  <div class="result-sub" id="stageSub">点击左侧"生成图像"开始创作</div>' +
     '  <div class="tip" id="tipBox"><span class="bulb">💡</span><span>提示：生成过程通常需要 30~60 秒，请耐心等待</span><span class="elapsed hidden" id="elapsed"></span></div>' +
     '  <div id="error" class="err hidden"></div>' +
     '</div>';
   $("resultMetaInline").textContent = "";
-  startLoader();
 });
 $("regenBtn").addEventListener("click", () => {
   $("genBtn").click();
@@ -784,13 +722,12 @@ $("genBtn").addEventListener("click", async () => {
   }
   $("resultBody").innerHTML =
     '<div id="stage">' +
-    '  <div class="loader-stage">' + LOADER_SVG + '</div>' +
+    '  <div class="loader-stage">' + LOADER_HTML + '</div>' +
     '  <div class="result-title" id="stageTitle">正在提交...</div>' +
     '  <div class="result-sub">AI 正在根据您的提示词创作图像，请稍候</div>' +
     '  <div class="tip"><span class="bulb">💡</span><span>提示：生成过程通常需要 30~60 秒，请耐心等待</span><span class="elapsed" id="elapsed"></span></div>' +
     '  <div id="error" class="err hidden"></div>' +
     '</div>';
-  startLoader();
 
   $("genBtn").disabled = true;
   const start = Date.now();
