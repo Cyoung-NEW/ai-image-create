@@ -3,8 +3,9 @@
 
 const SUBMIT_URL = "https://api.wuyinkeji.com/api/async/image_gpt";
 const DETAIL_URL = "https://api.wuyinkeji.com/api/async/detail";
-const MAX_UPLOAD = 10 * 1024 * 1024; // 10MB
+const MAX_UPLOAD = 30 * 1024 * 1024; // 30MB
 const UPLOAD_TTL_MS = 24 * 60 * 60 * 1000; // 24 小时
+const CHUNK_SIZE = 60 * 1024; // 60KB（Deno KV 单 value 上限 64KB，留余量）
 let _kv = null;
 async function getKv() {
   if (_kv) return _kv;
@@ -26,6 +27,9 @@ export default {
     if (url.pathname === "/api/upload" && request.method === "POST") {
       return handleUpload(request, url);
     }
+    if (url.pathname === "/api/delete-img" && request.method === "POST") {
+      return handleDelete(request);
+    }
     if (url.pathname.startsWith("/img/") && request.method === "GET") {
       return handleImage(url.pathname.slice(5));
     }
@@ -42,11 +46,36 @@ async function handleUpload(request, url) {
     if (!ct.startsWith("image/")) return json({ error: "仅支持图片" }, 400);
     const buf = new Uint8Array(await request.arrayBuffer());
     if (!buf.byteLength) return json({ error: "空文件" }, 400);
-    if (buf.byteLength > MAX_UPLOAD) return json({ error: "图片过大（>10MB）" }, 413);
+    if (buf.byteLength > MAX_UPLOAD) return json({ error: "图片过大（>30MB）" }, 413);
     const key = crypto.randomUUID().replace(/-/g, "");
     const kv = await getKv();
-    await kv.set(["img", key], { ct, data: buf }, { expireIn: UPLOAD_TTL_MS });
+    const chunks = Math.ceil(buf.byteLength / CHUNK_SIZE);
+    await kv.set(["img", key, "meta"], { ct, size: buf.byteLength, chunks }, { expireIn: UPLOAD_TTL_MS });
+    for (let i = 0; i < chunks; i++) {
+      const slice = buf.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+      await kv.set(["img", key, "data", i], slice, { expireIn: UPLOAD_TTL_MS });
+    }
     return json({ url: `${url.origin}/img/${key}` });
+  } catch (e) {
+    return json({ error: String(e) }, 500);
+  }
+}
+
+async function handleDelete(request) {
+  try {
+    const { keys } = await request.json();
+    if (!Array.isArray(keys)) return json({ error: "keys 必须是数组" }, 400);
+    const kv = await getKv();
+    for (const k of keys) {
+      if (typeof k !== "string" || !/^[a-f0-9]+$/i.test(k)) continue;
+      const meta = await kv.get(["img", k, "meta"]);
+      const chunks = (meta.value && meta.value.chunks) || 0;
+      await kv.delete(["img", k, "meta"]);
+      for (let i = 0; i < chunks; i++) {
+        await kv.delete(["img", k, "data", i]);
+      }
+    }
+    return json({ ok: true });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }
@@ -54,11 +83,20 @@ async function handleUpload(request, url) {
 
 async function handleImage(key) {
   const kv = await getKv();
-  const r = await kv.get(["img", key]);
-  if (!r.value) return new Response("not found", { status: 404 });
-  return new Response(r.value.data, {
+  const meta = await kv.get(["img", key, "meta"]);
+  if (!meta.value) return new Response("not found", { status: 404 });
+  const { ct, size, chunks } = meta.value;
+  const out = new Uint8Array(size);
+  let offset = 0;
+  for (let i = 0; i < chunks; i++) {
+    const r = await kv.get(["img", key, "data", i]);
+    if (!r.value) return new Response("incomplete", { status: 500 });
+    out.set(r.value, offset);
+    offset += r.value.byteLength;
+  }
+  return new Response(out, {
     headers: {
-      "Content-Type": r.value.ct,
+      "Content-Type": ct,
       "Cache-Control": "public, max-age=86400",
     },
   });
@@ -208,16 +246,20 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .opt .num { font-size: 14px; font-weight: 600; padding: 4px 0; }
   .upload-zone { margin-top: 8px; border: 1px dashed var(--border-strong); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.02); transition: border-color .15s, background .15s; font-size: 12px; color: var(--muted); }
   .upload-zone:hover, .upload-zone.drag { border-color: rgba(192,132,252,0.6); background: rgba(192,132,252,0.05); color: var(--text); }
-  .upload-zone.has-img { padding: 10px; }
-  .upload-preview { display: flex; align-items: center; gap: 10px; }
-  .upload-preview img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
-  .upload-preview .info { flex: 1; min-width: 0; text-align: left; font-size: 12px; }
-  .upload-preview .info .name { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .upload-preview .info .status { color: var(--muted-2); font-size: 11px; margin-top: 2px; }
-  .upload-preview .info .status.ok { color: #86efac; }
-  .upload-preview .info .status.err { color: #ffb3b3; }
-  .upload-preview .remove { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
-  .upload-preview .remove:hover { color: #ffb3b3; }
+  .upload-zone.has-img { padding: 10px; text-align: left; }
+  .upload-list { display: flex; flex-direction: column; gap: 6px; }
+  .upload-list:not(:empty) + #uploadEmpty { display:none; }
+  .upload-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 8px; background: rgba(255,255,255,0.025); border: 1px solid var(--border); }
+  .upload-item img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+  .upload-item .info { flex: 1; min-width: 0; font-size: 12px; }
+  .upload-item .info .name { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .upload-item .info .status { color: var(--muted-2); font-size: 11px; margin-top: 2px; }
+  .upload-item .info .status.ok { color: #86efac; }
+  .upload-item .info .status.err { color: #ffb3b3; }
+  .upload-item .remove { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+  .upload-item .remove:hover { color: #ffb3b3; }
+  .upload-add-hint { color: var(--muted-2); font-size: 11px; text-align: center; padding: 6px; border: 1px dashed var(--border); border-radius: 6px; cursor: pointer; }
+  .upload-add-hint:hover { color: var(--text); }
   .submit { margin-top: 20px; width: 100%; border: 0; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; background: linear-gradient(90deg, #d8a4f9 0%, #f0abfc 50%, #f9a8d4 100%); box-shadow: 0 12px 30px rgba(217, 156, 252, 0.28); transition: transform .08s ease, box-shadow .2s ease, opacity .2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
   .submit:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(217, 156, 252, 0.35); }
   .submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
@@ -329,20 +371,13 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
       <textarea class="textarea" id="prompt" maxlength="1000" placeholder="请输入您想要生成的图像描述... (可在此处直接 Ctrl+V 粘贴图片)"></textarea>
       <div class="hint">描述越详细，生成的图像越符合您的预期</div>
 
-      <div class="label">参考图（可选）</div>
+      <div class="label">参考图（可选，可多张）</div>
       <div class="upload-zone" id="uploadZone">
-        <input type="file" id="fileInput" accept="image/*" hidden />
-        <div id="uploadEmpty">📎 点击 / 拖拽 / 粘贴图片到这里</div>
-        <div class="upload-preview hidden" id="uploadPreview">
-          <img id="uploadThumb" alt="" />
-          <div class="info">
-            <div class="name" id="uploadName">image</div>
-            <div class="status" id="uploadStatus">上传中...</div>
-          </div>
-          <button class="remove" id="removeImg" type="button" title="移除">×</button>
-        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden />
+        <div id="uploadEmpty">📎 点击 / 拖拽 / 粘贴图片到这里（支持多张）</div>
+        <div class="upload-list" id="uploadList"></div>
       </div>
-      <div class="hint">上传后会作为参考图传给模型，临时保存 24 小时</div>
+      <div class="hint">生成成功后参考图会自动清理</div>
 
       <button class="submit" id="genBtn">✦ 生成图像</button>
     </aside>
@@ -435,40 +470,58 @@ function extractImageUrls(payload) {
   return out;
 }
 
-let uploadedUrl = null;
-function resetUpload() {
-  uploadedUrl = null;
-  $("uploadPreview").classList.add("hidden");
-  $("uploadEmpty").classList.remove("hidden");
-  $("uploadZone").classList.remove("has-img");
-  $("fileInput").value = "";
+let uploads = [];
+let uploadSeq = 0;
+function escHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function renderUploads() {
+  const list = $("uploadList");
+  $("uploadZone").classList.toggle("has-img", uploads.length > 0);
+  $("uploadEmpty").style.display = uploads.length ? "none" : "";
+  list.innerHTML = uploads.map(u =>
+    '<div class="upload-item" data-id="' + u.id + '">' +
+      '<img src="' + (u.thumb || "") + '" alt="" />' +
+      '<div class="info">' +
+        '<div class="name">' + escHtml(u.name) + '</div>' +
+        '<div class="status ' + (u.status || "") + '">' + escHtml(u.statusText || "") + '</div>' +
+      '</div>' +
+      '<button class="remove" type="button" data-id="' + u.id + '" title="移除">×</button>' +
+    '</div>'
+  ).join("") + (uploads.length ? '<div class="upload-add-hint" id="addMore">+ 再加一张</div>' : "");
 }
 async function uploadFile(file) {
   if (!file || !file.type || !file.type.startsWith("image/")) return;
-  if (file.size > 10 * 1024 * 1024) { alert("图片过大，请选 10MB 以下"); return; }
+  if (file.size > 30 * 1024 * 1024) { alert("图片过大，请选 30MB 以下：" + file.name); return; }
+  const id = ++uploadSeq;
+  const item = { id, name: file.name || "pasted-image", thumb: "", status: "", statusText: "上传中...", url: null, key: null };
+  uploads.push(item);
+  renderUploads();
   const reader = new FileReader();
-  reader.onload = e => { $("uploadThumb").src = e.target.result; };
+  reader.onload = e => { item.thumb = e.target.result; renderUploads(); };
   reader.readAsDataURL(file);
-  $("uploadName").textContent = file.name || "pasted-image";
-  $("uploadStatus").textContent = "上传中...";
-  $("uploadStatus").className = "status";
-  $("uploadEmpty").classList.add("hidden");
-  $("uploadPreview").classList.remove("hidden");
-  $("uploadZone").classList.add("has-img");
   try {
     const r = await fetch("/api/upload", { method: "POST", headers: { "Content-Type": file.type }, body: file });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "上传失败");
-    uploadedUrl = data.url;
-    $("uploadStatus").textContent = "已上传 ✓";
-    $("uploadStatus").className = "status ok";
+    item.url = data.url;
+    item.key = (data.url.split("/img/")[1] || "").split("?")[0];
+    item.status = "ok";
+    item.statusText = "已上传 ✓";
   } catch (e) {
-    uploadedUrl = null;
-    $("uploadStatus").textContent = "上传失败：" + (e.message || e);
-    $("uploadStatus").className = "status err";
+    item.status = "err";
+    item.statusText = "上传失败：" + (e.message || e);
   }
+  renderUploads();
 }
-$("fileInput").addEventListener("change", e => uploadFile(e.target.files[0]));
+async function deleteUploads(keys) {
+  if (!keys || !keys.length) return;
+  try {
+    await fetch("/api/delete-img", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({keys}) });
+  } catch (e) {}
+}
+$("fileInput").addEventListener("change", e => {
+  for (const f of e.target.files) uploadFile(f);
+  e.target.value = "";
+});
 $("uploadZone").addEventListener("click", e => {
   if (e.target.closest(".remove")) return;
   $("fileInput").click();
@@ -478,19 +531,29 @@ $("uploadZone").addEventListener("dragleave", () => $("uploadZone").classList.re
 $("uploadZone").addEventListener("drop", e => {
   e.preventDefault();
   $("uploadZone").classList.remove("drag");
-  uploadFile(e.dataTransfer.files[0]);
+  for (const f of e.dataTransfer.files) uploadFile(f);
 });
-$("removeImg").addEventListener("click", e => { e.stopPropagation(); resetUpload(); });
+$("uploadList").addEventListener("click", e => {
+  const btn = e.target.closest(".remove");
+  if (!btn) return;
+  e.stopPropagation();
+  const id = parseInt(btn.dataset.id, 10);
+  const item = uploads.find(u => u.id === id);
+  if (item && item.key) deleteUploads([item.key]);
+  uploads = uploads.filter(u => u.id !== id);
+  renderUploads();
+});
 document.addEventListener("paste", e => {
   const items = e.clipboardData && e.clipboardData.items;
   if (!items) return;
+  let any = false;
   for (const item of items) {
     if (item.type && item.type.startsWith("image/")) {
-      e.preventDefault();
       uploadFile(item.getAsFile());
-      return;
+      any = true;
     }
   }
+  if (any) e.preventDefault();
 });
 
 async function submitTask(apiKey, prompt, size, urls) {
@@ -605,7 +668,8 @@ $("genBtn").addEventListener("click", async () => {
   }, 250);
 
   try {
-    const refUrls = uploadedUrl ? [uploadedUrl] : [];
+    const okUploads = uploads.filter(u => u.status === "ok");
+    const refUrls = okUploads.map(u => u.url);
     const tasks = Array.from({length: count}).map(() =>
       waitForOne(apiKey, prompt, size, refUrls, start, status => {
         const t = document.getElementById("stageTitle");
@@ -615,6 +679,11 @@ $("genBtn").addEventListener("click", async () => {
     const items = await Promise.all(tasks);
     renderResults(items);
     addToHistory(prompt, size, items);
+    if (okUploads.length) {
+      deleteUploads(okUploads.map(u => u.key));
+      uploads = [];
+      renderUploads();
+    }
   } catch (e) {
     $("resultBody").innerHTML = '<div id="stage"><div class="result-title">生成失败</div><div class="result-sub">请检查 API Key 或稍后重试</div><div class="err">' + (e.message || String(e)).replace(/</g,"&lt;") + '</div></div>';
   } finally {
