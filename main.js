@@ -335,8 +335,8 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   </header>
 
   <section class="hero">
-    <h1>AI 图像生成器 <span>✦</span></h1>
-    <p>输入您的想法，AI 将为您创造独一无二的图像</p>
+    <h1>AI图像生成软件 <span>✦</span></h1>
+    <p>输入您的想法，将为您创造独一无二的图像</p>
   </section>
 
   <main class="layout">
