@@ -183,36 +183,7 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
     --accent-b: #d4b896;
     --accent-c: #b8946a;
   }
-  [data-theme="warm"] {
-    --bg-0: #fff1e6;
-    --bg-1: #ffe4d6;
-    --panel: rgba(255, 255, 255, 0.7);
-    --border: rgba(120, 60, 60, 0.08);
-    --border-strong: rgba(120, 60, 60, 0.16);
-    --text: #3d2a26;
-    --muted: #8a6a62;
-    --muted-2: #a88a82;
-    --accent-a: #ec4899;
-    --accent-b: #f97316;
-    --accent-c: #fbbf24;
-  }
-  [data-theme="warm"] body {
-    background:
-      radial-gradient(900px 500px at 8% -5%, rgba(251,113,133,0.18), transparent 60%),
-      radial-gradient(900px 500px at 100% 100%, rgba(252,211,77,0.16), transparent 60%),
-      linear-gradient(180deg, #fff1e6, #ffe4d6);
-  }
-  [data-theme="warm"] .input,
-  [data-theme="warm"] .select,
-  [data-theme="warm"] .textarea { background: rgba(255,255,255,0.5); }
-  [data-theme="warm"] .icon-btn { background: rgba(255,255,255,0.5); }
-  [data-theme="warm"] .opt { background: rgba(255,255,255,0.4); }
-  [data-theme="warm"] .opt:hover { background: rgba(255,255,255,0.7); }
-  [data-theme="warm"] .tip,
-  [data-theme="warm"] .img-card,
-  [data-theme="warm"] .upload-zone,
-  [data-theme="warm"] .upload-item,
-  [data-theme="warm"] .hist-card { background: rgba(255,255,255,0.5); }
+
   [data-theme="light"] body {
     background:
       radial-gradient(900px 500px at 8% -5%, rgba(201,160,100,0.10), transparent 60%),
@@ -255,7 +226,6 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .theme-btn { background: transparent; border: 0; color: var(--muted); padding: 6px 11px; border-radius: 8px; font-size: 12.5px; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 5px; }
   .theme-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
   .theme-btn.active { background: linear-gradient(90deg, var(--accent-a), var(--accent-b)); color: #1a1817; box-shadow: 0 4px 12px rgba(201,160,100,0.28); }
-  [data-theme="warm"] .theme-btn.active { color: #fff; box-shadow: 0 4px 12px rgba(236,72,153,0.28); }
   .hero { text-align: center; padding: 28px 20px 14px; }
   .hero h1 { margin: 0; font-size: 38px; font-weight: 700; letter-spacing: 1px;
     background: linear-gradient(90deg, var(--accent-a), var(--accent-b) 50%, var(--accent-c));
@@ -306,14 +276,11 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .upload-add-hint:hover { color: var(--text); }
   .submit { margin-top: 20px; width: 100%; border: 0; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; color: #1a1817; cursor: pointer; background: linear-gradient(90deg, var(--accent-a) 0%, var(--accent-b) 50%, var(--accent-c) 100%); box-shadow: 0 12px 30px rgba(201,160,100,0.30); transition: transform .08s ease, box-shadow .2s ease, opacity .2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
   .submit:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(201,160,100,0.38); }
-  [data-theme="warm"] .submit { color: #fff; box-shadow: 0 12px 30px rgba(236,72,153,0.30); }
-  [data-theme="warm"] .submit:hover { box-shadow: 0 16px 36px rgba(236,72,153,0.38); }
   .submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   .result-panel { min-height: 600px; display: flex; flex-direction: column; }
   .result-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
   .loader-stage { position: relative; width: 260px; height: 260px; display:flex; align-items:center; justify-content: center; }
   .loader-svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 18px rgba(201,160,100,0.40)); transition: filter .4s; }
-  [data-theme="warm"] .loader-svg { filter: drop-shadow(0 0 22px rgba(251,113,133,0.35)); }
   [data-theme="light"] .loader-svg { filter: drop-shadow(0 0 18px rgba(201,160,100,0.50)); }
   #ringGrad .grad-a { stop-color: var(--accent-a); }
   #ringGrad .grad-b { stop-color: var(--accent-b); }
@@ -337,6 +304,8 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   @keyframes fadeUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
   .err { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(255,90,90,0.08); border: 1px solid rgba(255,90,90,0.25); color: #ffb3b3; font-size: 13px; white-space: pre-wrap; text-align: left; max-width: 520px; }
   .hidden { display: none !important; }
+  .result-head { display:flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .result-actions { display:flex; gap: 8px; }
   .history-head { display:flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .history-head .title { display:flex; align-items:center; gap:8px; font-size: 15px; font-weight: 600; }
   .history-head .title .ic { color: var(--accent-a); }
@@ -358,9 +327,8 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
     <div class="logo"><span>✦</span> AI Image Generator</div>
     <div class="topbar-right">
       <div class="theme-picker" id="themePicker">
-        <button class="theme-btn" data-theme="dark">🌙 暗色</button>
         <button class="theme-btn" data-theme="light">☀ 亮色</button>
-        <button class="theme-btn" data-theme="warm">🍂 暖色</button>
+        <button class="theme-btn" data-theme="dark">🌙 暗色</button>
       </div>
       <button class="icon-btn">ⓘ 关于</button>
     </div>
@@ -423,7 +391,13 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
 
     <div class="right-col">
       <section class="panel result-panel">
-        <div class="panel-title"><span class="ic">🖼</span> 生成结果 <span class="result-meta-inline" id="resultMetaInline"></span></div>
+        <div class="result-head">
+          <div class="panel-title" style="margin:0"><span class="ic">🖼</span> 生成结果 <span class="result-meta-inline" id="resultMetaInline"></span></div>
+          <div class="result-actions">
+            <button class="icon-btn" id="regenBtn">🔄 重新制作</button>
+            <button class="icon-btn" id="clearResultBtn">🗑 清空窗口</button>
+          </div>
+        </div>
         <div class="result-body" id="resultBody">
           <div id="stage" class="empty">
             <div class="loader-stage empty">
@@ -468,7 +442,7 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   </main>
 
   <footer class="footer">
-    <div>© 2024 AI Image Generator. All rights reserved.</div>
+    <div>© 2026 Cyoung AI Image Generator. All rights reserved.</div>
     <div>本网站仅供学习交流，请遵守相关 API 使用条款 <span class="heart">♥</span></div>
   </footer>
 
@@ -769,6 +743,22 @@ $("clearHistBtn").addEventListener("click", () => {
   }
 });
 renderHistory();
+
+$("clearResultBtn").addEventListener("click", () => {
+  $("resultBody").innerHTML =
+    '<div id="stage" class="empty">' +
+    '  <div class="loader-stage empty">' + LOADER_SVG + '</div>' +
+    '  <div class="result-title" id="stageTitle">等待生成中...</div>' +
+    '  <div class="result-sub" id="stageSub">点击左侧"生成图像"开始创作</div>' +
+    '  <div class="tip" id="tipBox"><span class="bulb">💡</span><span>提示：生成过程通常需要 30~60 秒，请耐心等待</span><span class="elapsed hidden" id="elapsed"></span></div>' +
+    '  <div id="error" class="err hidden"></div>' +
+    '</div>';
+  $("resultMetaInline").textContent = "";
+  startLoader();
+});
+$("regenBtn").addEventListener("click", () => {
+  $("genBtn").click();
+});
 
 function renderResults(items, size) {
   const body = $("resultBody");
