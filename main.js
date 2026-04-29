@@ -302,27 +302,15 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
   .result-panel { min-height: 600px; display: flex; flex-direction: column; }
   .result-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
   .loader-stage { position: relative; width: 260px; height: 260px; display:flex; align-items:center; justify-content: center; }
-  .ring { width: 130px; height: 130px; border-radius: 50%;
-    background: conic-gradient(from 0deg, rgba(192,132,252,0) 0%, rgba(192,132,252,0.0) 50%, #c084fc 75%, #f0abfc 95%, rgba(240,171,252,0) 100%);
-    -webkit-mask: radial-gradient(circle, transparent 56px, #000 58px);
-            mask: radial-gradient(circle, transparent 56px, #000 58px);
-    animation: spin 1.6s cubic-bezier(.5,.15,.5,.85) infinite;
-    filter: drop-shadow(0 0 14px rgba(192,132,252,0.45));
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .stars span { position: absolute; color: #c084fc; opacity: 0.7; animation: twinkle 2.4s ease-in-out infinite; font-size: 14px; }
-  .stars span:nth-child(1) { top: 6%;  left: 22%; animation-delay: 0s;   font-size: 16px; color:#f0abfc;}
-  .stars span:nth-child(2) { top: 14%; right: 16%; animation-delay: .4s; font-size: 12px; }
-  .stars span:nth-child(3) { top: 50%; left: 4%;  animation-delay: .8s; font-size: 10px; color:#f9a8d4;}
-  .stars span:nth-child(4) { top: 56%; right: 6%; animation-delay: 1.2s; font-size: 14px; }
-  .stars span:nth-child(5) { bottom: 14%; left: 28%; animation-delay: 1.6s; font-size: 11px; color:#f0abfc;}
-  .stars span:nth-child(6) { bottom: 8%; right: 22%; animation-delay: 2.0s; font-size: 13px; }
-  .stars i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: rgba(192,132,252,0.55); animation: drift 5s ease-in-out infinite; }
-  .stars i:nth-child(7) { top: 30%; left: 12%; animation-delay: 0s; }
-  .stars i:nth-child(8) { top: 70%; right: 14%; animation-delay: 1.2s; background: rgba(249,168,212,0.6); }
-  .stars i:nth-child(9) { bottom: 28%; left: 50%; animation-delay: 2.4s; }
-  @keyframes twinkle { 0%,100%{opacity:.2; transform:scale(.8);} 50%{opacity:1; transform:scale(1.1);} }
-  @keyframes drift   { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+  .loader-svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 18px rgba(192,132,252,0.35)); transition: filter .4s; }
+  [data-theme="warm"] .loader-svg { filter: drop-shadow(0 0 22px rgba(251,113,133,0.35)); }
+  [data-theme="light"] .loader-svg { filter: drop-shadow(0 0 18px rgba(192,132,252,0.45)); }
+  #ringGrad .grad-a { stop-color: var(--accent-a); }
+  #ringGrad .grad-b { stop-color: var(--accent-b); }
+  #ringGrad .grad-c { stop-color: var(--accent-c); }
+  .loader-ring { stroke-linecap: round; stroke-linejoin: round; }
+  .loader-particle { fill: var(--accent-c); }
+  .loader-stage.empty .loader-svg { opacity: .55; }
   .result-title { font-size: 22px; font-weight: 600; margin-top: 18px; }
   .result-sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
   .tip { margin-top: 22px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 11px 16px; font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
@@ -428,12 +416,24 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
         <div class="panel-title"><span class="ic">🖼</span> 生成结果 <span class="result-meta-inline" id="resultMetaInline"></span></div>
         <div class="result-body" id="resultBody">
           <div id="stage" class="empty">
-            <div class="loader-stage">
-              <div class="ring"></div>
-              <div class="stars">
-                <span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span>
-                <i></i><i></i><i></i>
-              </div>
+            <div class="loader-stage empty">
+              <svg class="loader-svg" viewBox="0 0 200 200">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" class="grad-a" />
+                    <stop offset="50%" class="grad-b" />
+                    <stop offset="100%" class="grad-c" />
+                  </linearGradient>
+                </defs>
+                <path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.4" />
+                <path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.1" />
+                <path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="0.9" />
+                <circle class="loader-particle" r="0.9" /><circle class="loader-particle" r="1.1" />
+                <circle class="loader-particle" r="0.8" /><circle class="loader-particle" r="1.0" />
+                <circle class="loader-particle" r="1.2" /><circle class="loader-particle" r="0.9" />
+                <circle class="loader-particle" r="1.1" /><circle class="loader-particle" r="0.8" />
+                <circle class="loader-particle" r="1.0" /><circle class="loader-particle" r="0.9" />
+              </svg>
             </div>
             <div class="result-title" id="stageTitle">等待生成中...</div>
             <div class="result-sub" id="stageSub">点击左侧"生成图像"开始创作</div>
@@ -465,6 +465,70 @@ const INDEX_HTML = String.raw`<!DOCTYPE html>
 <script>
 const $ = id => document.getElementById(id);
 const STATUS_TEXT = {0:"初始化", 1:"生成中", 2:"成功", 3:"失败"};
+
+const LOADER_SVG =
+  '<svg class="loader-svg" viewBox="0 0 200 200">' +
+  '<defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">' +
+  '<stop offset="0%" class="grad-a" /><stop offset="50%" class="grad-b" /><stop offset="100%" class="grad-c" />' +
+  '</linearGradient></defs>' +
+  '<path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.4" />' +
+  '<path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="1.1" />' +
+  '<path class="loader-ring" stroke="url(#ringGrad)" fill="none" stroke-width="0.9" />' +
+  '<circle class="loader-particle" r="0.9" /><circle class="loader-particle" r="1.1" />' +
+  '<circle class="loader-particle" r="0.8" /><circle class="loader-particle" r="1.0" />' +
+  '<circle class="loader-particle" r="1.2" /><circle class="loader-particle" r="0.9" />' +
+  '<circle class="loader-particle" r="1.1" /><circle class="loader-particle" r="0.8" />' +
+  '<circle class="loader-particle" r="1.0" /><circle class="loader-particle" r="0.9" />' +
+  '</svg>';
+
+let _loaderRaf = null;
+let _loaderStart = 0;
+function startLoader() {
+  if (_loaderRaf) cancelAnimationFrame(_loaderRaf);
+  _loaderStart = performance.now();
+  function frame(now) {
+    const svg = document.querySelector(".loader-svg");
+    if (!svg) { _loaderRaf = null; return; }
+    const t = (now - _loaderStart) / 1000;
+    const rings = svg.querySelectorAll(".loader-ring");
+    const particles = svg.querySelectorAll(".loader-particle");
+    rings.forEach((ring, idx) => {
+      const baseR = 48 + idx * 14;
+      const amp = 3.2 + idx * 1.1;
+      const freq = 4 + idx * 1.3;
+      const phase = t * (0.7 + idx * 0.18);
+      const rot = t * (0.15 + idx * 0.05) * (idx % 2 === 0 ? 1 : -1);
+      const N = 96;
+      let d = "";
+      for (let i = 0; i <= N; i++) {
+        const theta = (i / N) * Math.PI * 2 + rot;
+        const r = baseR + amp * Math.sin(freq * theta + phase) + 1.2 * Math.sin(2 * theta - phase * 0.6);
+        const x = 100 + r * Math.cos(theta);
+        const y = 100 + r * Math.sin(theta);
+        d += (i === 0 ? "M" : "L") + x.toFixed(2) + "," + y.toFixed(2) + " ";
+      }
+      d += "Z";
+      ring.setAttribute("d", d);
+      const breathe = 0.55 + 0.45 * (Math.sin(t * 1.1 + idx * 0.85) * 0.5 + 0.5);
+      ring.setAttribute("opacity", breathe.toFixed(3));
+    });
+    particles.forEach((p, idx) => {
+      const orbitR = 14 + (idx % 4) * 6;
+      const speed = 0.25 + (idx % 5) * 0.06;
+      const phase = idx * 1.37;
+      const wobble = 1.5 * Math.sin(t * 1.6 + idx);
+      const x = 100 + (orbitR + wobble) * Math.cos(t * speed + phase);
+      const y = 100 + (orbitR + wobble) * Math.sin(t * speed * 1.1 + phase) * 0.95;
+      p.setAttribute("cx", x.toFixed(2));
+      p.setAttribute("cy", y.toFixed(2));
+      const tw = 0.35 + 0.65 * (Math.sin(t * 2.2 + idx * 0.9) * 0.5 + 0.5);
+      p.setAttribute("opacity", tw.toFixed(3));
+    });
+    _loaderRaf = requestAnimationFrame(frame);
+  }
+  _loaderRaf = requestAnimationFrame(frame);
+}
+startLoader();
 
 const THEME_KEY = "ui_theme";
 function applyTheme(theme) {
@@ -720,14 +784,13 @@ $("genBtn").addEventListener("click", async () => {
   }
   $("resultBody").innerHTML =
     '<div id="stage">' +
-    '  <div class="loader-stage"><div class="ring"></div>' +
-    '    <div class="stars"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span><i></i><i></i><i></i></div>' +
-    '  </div>' +
+    '  <div class="loader-stage">' + LOADER_SVG + '</div>' +
     '  <div class="result-title" id="stageTitle">正在提交...</div>' +
     '  <div class="result-sub">AI 正在根据您的提示词创作图像，请稍候</div>' +
     '  <div class="tip"><span class="bulb">💡</span><span>提示：生成过程通常需要 30~60 秒，请耐心等待</span><span class="elapsed" id="elapsed"></span></div>' +
     '  <div id="error" class="err hidden"></div>' +
     '</div>';
+  startLoader();
 
   $("genBtn").disabled = true;
   const start = Date.now();
