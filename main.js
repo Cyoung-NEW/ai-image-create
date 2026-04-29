@@ -563,7 +563,7 @@ const PROMPT_INSPIRATIONS = [
   "极简主义的山脉剪影，渐变天空，极简平面设计",
 ];
 const ph = PROMPT_INSPIRATIONS[Math.floor(Math.random() * PROMPT_INSPIRATIONS.length)];
-$("prompt").placeholder = "💡 试试：" + ph + "\n\n（点击此处开始输入）";
+$("prompt").placeholder = "💡 试试：" + ph + "\n\n（点击此处开始输入，参考图片可直接粘贴在此处）";
 
 function bindGrid(gridId) {
   const g = $(gridId);
