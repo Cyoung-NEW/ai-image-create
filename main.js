@@ -5,7 +5,13 @@ const SUBMIT_URL = "https://api.wuyinkeji.com/api/async/image_gpt";
 const DETAIL_URL = "https://api.wuyinkeji.com/api/async/detail";
 const MAX_UPLOAD = 10 * 1024 * 1024; // 10MB
 const UPLOAD_TTL_MS = 24 * 60 * 60 * 1000; // 24 小时
-const kv = await Deno.openKv();
+let _kv = null;
+async function getKv() {
+  if (_kv) return _kv;
+  if (typeof Deno === "undefined" || !Deno.openKv) throw new Error("KV 不可用");
+  _kv = await Deno.openKv();
+  return _kv;
+}
 
 export default {
   async fetch(request) {
@@ -38,6 +44,7 @@ async function handleUpload(request, url) {
     if (!buf.byteLength) return json({ error: "空文件" }, 400);
     if (buf.byteLength > MAX_UPLOAD) return json({ error: "图片过大（>10MB）" }, 413);
     const key = crypto.randomUUID().replace(/-/g, "");
+    const kv = await getKv();
     await kv.set(["img", key], { ct, data: buf }, { expireIn: UPLOAD_TTL_MS });
     return json({ url: `${url.origin}/img/${key}` });
   } catch (e) {
@@ -46,6 +53,7 @@ async function handleUpload(request, url) {
 }
 
 async function handleImage(key) {
+  const kv = await getKv();
   const r = await kv.get(["img", key]);
   if (!r.value) return new Response("not found", { status: 404 });
   return new Response(r.value.data, {
